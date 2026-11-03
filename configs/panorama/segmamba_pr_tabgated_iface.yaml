@@ -1,0 +1,134 @@
+seed: 42
+output_dir: output/panorama/segmamba_pr_tabgated_iface
+num_classes: 6
+labels:
+  background: 0
+  pdac: 1
+  veins: 2
+  arteries: 3
+  pancreas: 4
+  cbd: 5
+data:
+  manifest: data/panorama_manifest_seed42.json
+  roi_size:
+  - 128
+  - 128
+  - 128
+  batch_size: 1
+  num_samples: 1
+  crop_pos: 2.0
+  crop_neg: 1.0
+  num_workers: 16
+  cache_rate: 1.0
+  hu_min: -175
+  hu_max: 250
+  orientation: RAS
+  crop_mode: posneg
+  image_dir: /path/to/panorama/converted/images
+  label_dir: /path/to/panorama/converted/labels
+  clinical_xlsx: /path/to/panorama/clinical_information.xlsx
+  test_list_path: /path/to/panorama/PANORAMA_test.txt
+  dpcg_csv: /path/to/panorama/dpcg_labels.csv
+  generated_manifest: data/panorama_manifest_seed42.json
+  image_suffix: _0000_trans.nii.gz
+  label_suffix: _trans.nii.gz
+  val_fraction: 0.15
+  infer_pdac_from_mask: false
+  require_label: true
+  verification_csv: /path/to/panorama/PANORAMA_verification.csv
+  verification_label_column: Pancreas_label_v2
+  exclude_unusable_verification: false
+  label_remap:
+    orig_labels:
+    - 5
+    - 6
+    target_labels:
+    - 4
+    - 5
+  val_cache_rate: 1.0
+tabular:
+  force_missing: false
+  scanner_min_count: 2
+  dropout: 0.2
+  dropout_final: 0.6
+sampler:
+  enabled: true
+  epoch_multiplier: 1.0
+  no_pdac_weight: 0.8
+  benign_weight: 1.5
+  pdac_weight: 2.5
+model:
+  name: segmamba_pr_tabgated
+  in_channels: 1
+  out_channels: 6
+  depths:
+  - 2
+  - 2
+  - 2
+  - 2
+  feat_size:
+  - 48
+  - 96
+  - 192
+  - 384
+  hidden_size: 768
+  norm_name: instance
+  spatial_dims: 3
+  d_state: 16
+  d_conv: 4
+  expand: 2
+  scan_directions: 3
+  adaptive_fusion: false
+  fusion_per_channel: true
+  ms_dwconv: false
+  lk_separable: false
+  lk_anisotropic: false
+  use_feature_aggregator: false
+  interface_margin: true
+  interface_margin_radius_mm: 5.0
+  interface_margin_hidden: 16
+  interface_margin_gamma_init: 0.05
+  interface_margin_mask: interface
+  require_mamba_ssm: true
+  tab_embed_dim: 64
+  gamma_init: 0.05
+  gated_stages:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+train:
+  max_epochs: 500
+  val_every: 10
+  save_every: 10
+  amp: false
+  amp_dtype: fp32
+  lr: 0.0001
+  warmup_epochs: 10
+  min_lr: 1.0e-06
+  weight_decay: 1.0e-05
+  grad_accum: 8
+  grad_clip: 1.0
+  best_metric: val_missing_dice_mean_fg
+  require_cuda: true
+  channels_last: false
+val:
+  sw_batch_size: 2
+  pdac_threshold: 0.5
+  overlap: 0.5
+  passes:
+  - missing
+infer:
+  require_cuda: true
+  preprocess_raw: true
+  orientation: LPS
+  spacing:
+  - 0.8
+  - 0.8
+  - 3.0
+  image_dir: /path/to/panorama/images
+  image_suffix: _0000.nii.gz
+  fallback_image_suffixes:
+  - _0000.nii.gz
+  - .nii.gz

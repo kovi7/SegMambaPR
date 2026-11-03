@@ -1,0 +1,111 @@
+# Supervised pretraining on PanTS (28 labels + background). The PANORAMA fine-tuning
+# starts from the last checkpoint of this run (end of the cosine schedule).
+seed: 42
+output_dir: pretrained/pants/segmamba_pr_pants_all
+num_classes: 29
+labels:
+  background: 0
+  pdac: 28
+  veins: 27
+  arteries: 26
+  pancreas: 17
+  cbd: 7
+data:
+  manifest: data/pants_manifest_all_val150.json
+  roi_size:
+  - 128
+  - 128
+  - 128
+  batch_size: 1
+  num_samples: 1
+  crop_pos: 2.0
+  crop_neg: 1.0
+  num_workers: 16
+  cache_rate: 0.1
+  hu_min: -175
+  hu_max: 250
+  orientation: RAS
+  crop_mode: label_classes
+  class_crop_ratios: [1.5, 0.1, 0.1, 0.3, 0.1, 0.3, 0.1, 0.2, 0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.3, 0.1, 0.1, 0.1, 0.3, 0.3, 3.0]
+  dataset: pants_converted
+  pants_mode: all
+  generated_manifest: data/pants_manifest_all_val150.json
+  converted_root: /path/to/PanTS/converted
+  label_dir: /path/to/PanTS/converted/labels/all
+  split_json: /path/to/PanTS/converted/splits.json
+  image_suffix: _0000_trans.nii.gz
+  label_suffix: _trans.nii.gz
+  verify_paths: true
+  count_labels: true
+  val_cache_rate: 0.0
+tabular:
+  force_missing: true
+  dropout: 1.0
+sampler:
+  enabled: true
+  epoch_multiplier: 1.0
+  no_pdac_weight: 1.0
+  benign_weight: 1.0
+  pdac_weight: 10.0
+model:
+  name: segmamba_pr
+  in_channels: 1
+  out_channels: 29
+  depths:
+  - 2
+  - 2
+  - 2
+  - 2
+  feat_size:
+  - 48
+  - 96
+  - 192
+  - 384
+  hidden_size: 768
+  norm_name: instance
+  spatial_dims: 3
+  d_state: 16
+  d_conv: 4
+  expand: 2
+  scan_directions: 3
+  adaptive_fusion: false
+  fusion_per_channel: true
+  ms_dwconv: false
+  lk_separable: false
+  lk_anisotropic: false
+  require_mamba_ssm: true
+  tab_embed_dim: 64
+  gated_stages: []
+train:
+  max_epochs: 120
+  val_every: 20
+  save_every: 1
+  amp: false
+  amp_dtype: fp32
+  lr: 0.0001
+  warmup_epochs: 2
+  min_lr: 1.0e-06
+  weight_decay: 1.0e-05
+  grad_accum: 8
+  grad_clip: 1.0
+  best_metric: val_dice_mean_fg
+  require_cuda: true
+  channels_last: false
+val:
+  compute_loss: false
+  sw_batch_size: 2
+  pdac_threshold: 0.5
+  overlap: 0.5
+infer:
+  require_cuda: true
+  preprocess_raw: true
+  orientation: LPS
+  spacing:
+  - 0.8
+  - 0.8
+  - 3.0
+  image_dir: /path/to/panorama/images
+  image_suffix: _0000.nii.gz
+  fallback_image_suffixes:
+  - _0000.nii.gz
+  - .nii.gz

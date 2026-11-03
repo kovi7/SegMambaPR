@@ -1,0 +1,10 @@
+SegMambaPR
+Copyright 2026 Justyna Kowalska
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Parts of src/models/segmamba_pr.py (MambaLayer, MlpChannel, MambaEncoder and the
+encoder-decoder layout) are adapted from SegMamba, https://github.com/ge-xing/SegMamba,
+whose model file carries the notice:
+  Copyright (c) MONAI Consortium
+  Licensed under the Apache License, Version 2.0
